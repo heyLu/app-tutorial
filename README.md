@@ -1,9 +1,8 @@
 # pedestal-app-tutorial
 
-Start working on this application by writing its behavior in the file
-`app/src/pedestal_app_tutorial/behavior.clj`
+This project will host the in-progress version of the Pedestal app
+tutorial. Once the tutorial is finished, the source code will be moved
+to the Pedestal `samples` project and the documents in the wiki will be
+moved to Pedestal documentation.
 
-## Links
-
-* [Getting Started](https://github.com/pedestal/pedestal/tree/master/app#usage)
-* [Overview of how pedestal applications work](http://pedestal.io/documentation/application-overview/)
+The tutorial is located in the wiki.
