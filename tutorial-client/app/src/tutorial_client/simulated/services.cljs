@@ -20,3 +20,6 @@
   (start [this]
     (receive-messages app))
   (stop [this]))
+
+(defn services-fn [message input-queue]
+  (.log js/console (str "Sending message to server: " message)))
