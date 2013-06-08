@@ -5,7 +5,8 @@
             [io.pedestal.app.render :as render]
             [io.pedestal.app.messages :as msg]
             [tutorial-client.behavior :as behavior]
-            [tutorial-client.rendering :as rendering]))
+            [tutorial-client.rendering :as rendering]
+            [tutorial-client.services :as services]))
 
 (defn round-number [[op path n]]
   [[op path (/ (Math.round (* 100 n)) 100)]])
@@ -22,4 +23,8 @@
     {:app app :app-model app-model}))
 
 (defn ^:export main []
-  (create-app (rendering/render-config)))
+  (let [app (create-app (rendering/render-config))
+        services (services/->Services (:app app))]
+    (app/consume-effects (:app app) services/services-fn)
+    (p/start services)
+    app))
