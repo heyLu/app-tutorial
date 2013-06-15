@@ -10,29 +10,17 @@
 (defn swap-transform [_ message]
   (:value message))
 
-(defn total-count [_ inputs]
-  (let [nums (dataflow/input-vals inputs)]
-    (apply + nums)))
+(defn total-count [_ nums]
+  (apply + nums))
 
-(defn max-count [old-value inputs]
-  (let [nums (dataflow/input-vals inputs)
-        m (or (apply max nums) 0)]
-    (if (> m old-value)
-      m
-      old-value)))
+(defn maximum [old-value nums]
+  (apply max (or old-value 0) nums))
 
-(defn average-count [_ inputs]
-  (let [input-map (dataflow/input-map inputs)
-        total (get input-map [:total-count])
-        nums (vals (dissoc input-map [:total-count]))]
-    (/ total (count nums))))
+(defn average-count [_ {:keys [total nums]}]
+  (/ total (count nums)))
 
-(defn maximum [old-value inputs]
-  (max (or old-value 0) (or (dataflow/single-val inputs) 0)))
-
-(defn cumulative-average [debug inputs]
-  (let [k (last (first (keys (dataflow/input-map inputs))))
-        x (dataflow/single-val inputs)
+(defn cumulative-average [debug key x]
+  (let [k (last key)
         i (inc (or (::avg-count debug) 0))
         avg (or (::avg-raw debug) 0)
         new-avg (+ avg (/ (- x avg) i))]
@@ -44,10 +32,8 @@
 (defn init-emitter [_]
   [[:transform-enable [:tutorial :my-counter] :inc [{msg/topic [:my-counter]}]]])
 
-(defn publish-counter [inputs]
-  [{msg/type :swap
-    msg/topic [:other-counters]
-    :value (dataflow/single-val inputs)}])
+(defn publish-counter [count]
+  [{msg/type :swap msg/topic [:other-counters] :value count}])
 
 (def example-app
   {:version 2
@@ -55,12 +41,17 @@
    :transform [[:inc   [:my-counter]        inc-transform]
                [:swap  [:other-counters :*] swap-transform]
                [:debug [:pedestal :**]      swap-transform]]
-   :derive #{[#{[:my-counter] [:other-counters :*]} [:total-count] total-count]
-             [#{[:my-counter] [:other-counters :*] [:total-count]} [:average-count] average-count]
-             [#{[:my-counter] [:other-counters :*]} [:max-count] max-count]
-             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug :dataflow-time-max] maximum]
-             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average]}
-   :effect #{[#{[:my-counter]} publish-counter]}
+   :derive #{[#{[:my-counter] [:other-counters :*]} [:total-count]
+              total-count :vals]
+             [{[:my-counter] :nums [:other-counters :*] :nums [:total-count] :total}
+              [:average-count] average-count :map]
+             [#{[:my-counter] [:other-counters :*]} [:max-count]
+              maximum :vals]
+             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug :dataflow-time-max]
+              maximum :vals]
+             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug]
+              cumulative-average :map-seq]}
+   :effect #{[#{[:my-counter]} publish-counter :single-val]}
    :emit [{:in #{[:my-counter]
                  [:other-counters :*]
                  [:average-count]
