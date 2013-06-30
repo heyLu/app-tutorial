@@ -43,11 +43,15 @@
 (defn add-handler [renderer [_ path transform-name messages] input-queue]
   (js/addHandler (game renderer)
                  (fn [p]
-                   (events/send-transforms input-queue transform-name messages))))
+                   (events/send-transforms input-queue transform-name messages {:points p}))))
 
 (defn set-player-order [renderer [_ path _ v] _]
   (let [n (last path)]
     (js/setOrder (game renderer) n v)))
+
+(defn add-bubbles [renderer [_ path _ v] _]
+  (dotimes [x (:count v)]
+    (js/addBubble (game renderer))))
 
 (defn render-config []
   [[:node-create [:main] add-template]
@@ -57,4 +61,5 @@
    [:value [:pedestal :debug :*] set-stat]
    [:value [:main :*] set-stat]
    [:transform-enable [:main :my-counter] add-handler]
-   [:value [:main :player-order :*] set-player-order]])
+   [:value [:main :player-order :*] set-player-order]
+   [:value [:main :add-bubbles] add-bubbles]])
