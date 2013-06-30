@@ -30,11 +30,7 @@
   (js/addPlayer (game renderer) (last path)))
 
 (defn set-score [renderer [_ path _ v] _]
-  (let [n (last path)
-        g (game renderer)]
-    (js/setScore g n v)
-    (when (not= n "Me")
-      (js/removeBubble g))))
+  (js/setScore (game renderer) (last path) v))
 
 (defn set-stat [renderer [_ path _ v] _]
   (let [s (last path)]
@@ -53,6 +49,24 @@
   (dotimes [x (:count v)]
     (js/addBubble (game renderer))))
 
+(defn remove-bubbles [renderer _ _]
+  (js/removeBubble (game renderer)))
+
+;; Login
+
+(defn add-login-template [renderer [_ path :as delta] input-queue]
+  (let [parent (render/get-parent-id renderer path)
+        id (render/new-id! renderer path)
+        html (:login-page templates)]
+    (dom/append! (dom/by-id parent) (html {:id id}))))
+
+(defn add-submit-login-handler [_ [_ path transform-name messages] input-queue]
+  (events/collect-and-send :click "login-button" input-queue transform-name messages
+                           {"login-name" :value}))
+
+(defn remove-submit-login-event [_ _ _]
+  (events/remove-click-event "login-button"))
+
 (defn render-config []
   [[:node-create [:main] add-template]
    [:node-destroy [:main] destroy-game]
@@ -62,4 +76,12 @@
    [:value [:main :*] set-stat]
    [:transform-enable [:main :my-counter] add-handler]
    [:value [:main :player-order :*] set-player-order]
-   [:value [:main :add-bubbles] add-bubbles]])
+   [:value [:main :add-bubbles] add-bubbles]
+   [:value [:main :remove-bubbles] remove-bubbles]
+   ;; Login rendering
+   [:node-create  [:login] add-login-template]
+   [:node-destroy [:login] h/default-destroy]
+   [:transform-enable [:login :name] add-submit-login-handler]
+   [:transform-disable [:login :name] remove-submit-login-event]
+
+   ])

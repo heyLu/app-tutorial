@@ -43,6 +43,9 @@
 (defn add-bubbles [_ {:keys [clock players]}]
   {:clock clock :count (count players)})
 
+(defn remove-bubbles [rb other-counters]
+  (assoc rb :total (apply + other-counters)))
+
 (defn init-login [_]
   [{:login
     {:name
@@ -54,8 +57,8 @@
   [[:transform-enable [:main :my-counter]
     :add-points [{msg/topic [:my-counter] (msg/param :points) {}}]]])
 
-(defn publish-counter [count]
-  [{msg/type :swap msg/topic [:other-counters] :value count}])
+(defn publish-counter [{:keys [count name]}]
+  [{msg/type :swap msg/topic [:other-counters name] :value count}])
 
 (def example-app
   {:version 2
@@ -73,8 +76,9 @@
               maximum :vals]
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]
              [#{[:counters]} [:player-order] sort-players :single-val]
-             [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]}
-   :effect #{[#{[:my-counter]} publish-counter :single-val]}
+             [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]
+             [#{[:other-counters :*]} [:remove-bubbles] remove-bubbles :vals]}
+   :effect #{[{[:my-counter] :count [:login :name] :name} publish-counter :map]}
    :emit [{:init init-login}
           [#{[:login :*]} (app/default-emitter [])]
           {:init init-main}
@@ -86,7 +90,8 @@
              [:pedestal :debug :dataflow-time-max]
              [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]
           [#{[:player-order :*]} (app/default-emitter [:main])]
-          [#{[:add-bubbles]} (app/default-emitter [:main])]]
+          [#{[:add-bubbles]
+             [:remove-bubbles]} (app/default-emitter [:main])]]
    :focus {:login [[:login]]
            :game  [[:main] [:pedestal]]
            :default :login}})
