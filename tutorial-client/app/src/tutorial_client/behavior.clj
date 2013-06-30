@@ -57,6 +57,14 @@
   [[:transform-enable [:main :my-counter]
     :add-points [{msg/topic [:my-counter] (msg/param :points) {}}]]])
 
+(defn init-wait [_]
+  (let [start-game {msg/type :swap msg/topic [:active-game] :value true}]
+    [{:wait
+     {:start
+      {:transforms
+       {:start-game [{msg/topic msg/output :payload start-game}
+                     start-game]}}}}]))
+
 (defn publish-counter [{:keys [count name]}]
   [{msg/type :swap msg/topic [:other-counters name] :value count}])
 
@@ -81,11 +89,13 @@
    :effect #{[{[:my-counter] :count [:login :name] :name} publish-counter :map]}
    :emit [{:init init-login}
           [#{[:login :*]} (app/default-emitter [])]
+          {:init init-wait}
+          {:in #{[:counters :*]} :fn (app/default-emitter [:wait]) :mode :always}
           {:init init-main}
           [#{[:total-count]
              [:max-count]
              [:average-count]} (app/default-emitter [:main])]
-          [#{[:counters :*]} (app/default-emitter [:main])]
+          {:in #{[:counters :*]} :fn (app/default-emitter [:main]) :mode :always}
           [#{[:pedestal :debug :dataflow-time]
              [:pedestal :debug :dataflow-time-max]
              [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]
@@ -93,5 +103,5 @@
           [#{[:add-bubbles]
              [:remove-bubbles]} (app/default-emitter [:main])]]
    :focus {:login [[:login]]
-           :game  [[:main] [:pedestal]]
+           :game  [[:main] [:pedestal] [:wait]]
            :default :login}})
