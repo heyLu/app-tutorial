@@ -1,4 +1,4 @@
-(defproject tutorial-client "0.0.4-SNAPSHOT"
+(defproject tutorial-client "0.0.6-SNAPSHOT"
   :description "FIXME: write description"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-1586"]
