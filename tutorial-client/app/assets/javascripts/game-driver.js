@@ -79,6 +79,16 @@ var updatePlayerOrder = function() {
   }
 }
 
+var makeCircles = function() {
+  if(gameActive) {
+    var p = players.length;
+    for(var i=0;i<p;i++) {
+      game.addBubble();
+    }
+    setTimeout(makeCircles, 2000);
+  }
+}
+
 var startGame = function() {
   console.log("start game");
   game = createGame("game-board");
@@ -98,6 +108,7 @@ var startGame = function() {
   updateDataflowStats();
   updatePlayerScores();
   updatePlayerOrder();
+  makeCircles();
 }
 
 var endGame = function() {
