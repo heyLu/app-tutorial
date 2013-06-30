@@ -33,7 +33,8 @@
                   ;; :tools-public. Override this value in an aspect
                   ;; with :tools-output. :public maps to out/public
                   ;; and and :tools-public maps to tools/out/public.
-                  :output-root :public}
+                  :output-root :public
+                  :api-server {:host "localhost" :port 8080 :log-fn nil}}
     ;; Add arbitrary links to the control panel
     :control-panel {:design {:uri "/design.html"
                              :name "Design"
@@ -95,7 +96,8 @@
                             :out-file "tutorial-client-dev.js"
                             :main 'tutorial_client.start
                             :logging? true
-                            :order 3}
+                            :order 3
+                            :use-api-server? true}
               :fresh {:uri "/fresh.html"
                       :name "Fresh"
                       :out-file "fresh.js"
@@ -108,4 +110,5 @@
                            :optimizations :advanced
                            :out-file "tutorial-client.js"
                            :main 'tutorial_client.start
-                           :order 5}}}})
+                           :order 5
+                           :use-api-server? true}}}})
