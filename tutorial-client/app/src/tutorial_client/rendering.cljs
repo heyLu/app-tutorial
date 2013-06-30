@@ -45,6 +45,10 @@
                  (fn [p]
                    (events/send-transforms input-queue transform-name messages))))
 
+(defn set-player-order [renderer [_ path _ v] _]
+  (let [n (last path)]
+    (js/setOrder (game renderer) n v)))
+
 (defn render-config []
   [[:node-create [:main] add-template]
    [:node-destroy [:main] destroy-game]
@@ -52,4 +56,5 @@
    [:value [:main :counters :*] set-score]
    [:value [:pedestal :debug :*] set-stat]
    [:value [:main :*] set-stat]
-   [:transform-enable [:main :my-counter] add-handler]])
+   [:transform-enable [:main :my-counter] add-handler]
+   [:value [:main :player-order :*] set-player-order]])

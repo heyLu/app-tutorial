@@ -30,6 +30,11 @@
       ::avg-raw new-avg
       (keyword (str (name k) "-avg")) (int new-avg))))
 
+(defn sort-players [_ players]
+  (into {} (map-indexed (fn [i [k v]] [k i])
+                        (reverse
+                         (sort-by second (map (fn [[k v]] [k v]) players))))))
+
 (defn init-main [_]
   [[:transform-enable [:main :my-counter] :inc [{msg/topic [:my-counter]}]]])
 
@@ -48,7 +53,8 @@
              [{[:counters :*] :nums [:total-count] :total} [:average-count] average-count :map]
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug :dataflow-time-max]
               maximum :vals]
-             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]}
+             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]
+             [#{[:counters]} [:player-order] sort-players :single-val]}
    :effect #{[#{[:my-counter]} publish-counter :single-val]}
    :emit [{:init init-main}
           [#{[:total-count]
@@ -57,4 +63,5 @@
           [#{[:counters :*]} (app/default-emitter [:main])]
           [#{[:pedestal :debug :dataflow-time]
              [:pedestal :debug :dataflow-time-max]
-             [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]]})
+             [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]
+          [#{[:player-order :*]} (app/default-emitter [:main])]]})
