@@ -1,7 +1,8 @@
 (ns ^:shared tutorial-client.behavior
     (:require [clojure.string :as string]
               [io.pedestal.app.messages :as msg]
-              [io.pedestal.app :as app]))
+              [io.pedestal.app :as app]
+              [io.pedestal.app.dataflow :as dataflow]))
 
 (defn inc-transform [old-value _]
   ((fnil inc 0) old-value))
@@ -51,7 +52,7 @@
     {:name
      {:transforms
       {:login [{msg/type :swap msg/topic [:login :name] (msg/param :value) {}}
-               {msg/type :set-focus msg/topic msg/app-model :name :game}]}}}}])
+               {msg/type :set-focus msg/topic msg/app-model :name :wait}]}}}}])
 
 (defn init-main [_]
   [[:transform-enable [:main :my-counter]
@@ -62,11 +63,18 @@
     [{:wait
      {:start
       {:transforms
-       {:start-game [{msg/topic msg/output :payload start-game}
+       {:start-game [{msg/topic msg/effect :payload start-game}
                      start-game]}}}}]))
 
 (defn publish-counter [{:keys [count name]}]
   [{msg/type :swap msg/topic [:other-counters name] :value count}])
+
+(defn start-game [inputs]
+  (let [active (dataflow/old-and-new inputs [:active-game])
+        login (dataflow/old-and-new inputs [:login :name])]
+    (when (or (and (:new login) (not (:old active)) (:new active))
+              (and (:new active) (not (:old login)) (:new login)))
+      [^:input {msg/topic msg/app-model msg/type :set-focus :name :game}])))
 
 (def example-app
   {:version 2
@@ -87,6 +95,7 @@
              [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]
              [#{[:other-counters :*]} [:remove-bubbles] remove-bubbles :vals]}
    :effect #{[{[:my-counter] :count [:login :name] :name} publish-counter :map]}
+   :continue #{[#{[:login :name] [:active-game]} start-game]}
    :emit [{:init init-login}
           [#{[:login :*]} (app/default-emitter [])]
           {:init init-wait}
@@ -103,5 +112,6 @@
           [#{[:add-bubbles]
              [:remove-bubbles]} (app/default-emitter [:main])]]
    :focus {:login [[:login]]
-           :game  [[:main] [:pedestal] [:wait]]
+           :wait  [[:wait]]
+           :game  [[:main] [:pedestal]]
            :default :login}})
