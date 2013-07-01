@@ -81,6 +81,18 @@
         html (:player templates)]
     (dom/append! (dom/by-id parent) (html {:id id :player-name (last path)}))))
 
+(defn render-winner [renderer [_ path _ v] _]
+  (templates/update-t renderer [:wait]
+                      {:winner (str (:player v) " wins with a score of " (:score v))}))
+
+(defn render-high-scores [renderer [_ path _ v] _]
+  (let [t (:high-score templates)
+        high-scores (apply str
+                           (map (fn [{:keys [player score]}]
+                                  (t {:player-name player :player-score score})) v))]
+    (templates/update-t renderer [:wait]
+                        {:high-scores high-scores})))
+
 (defn render-config []
   [[:node-create [:main] add-template]
    [:node-destroy [:main] destroy-game]
@@ -103,4 +115,6 @@
    [:transform-enable [:wait :start] (h/add-send-on-click "start-button")]
    [:transform-disable [:wait :start] (h/remove-send-on-click "start-button")]
    [:node-create [:wait :counters :*] add-waiting-player]
-   [:node-destroy [:wait :counters :*] h/default-destroy]])
+   [:node-destroy [:wait :counters :*] h/default-destroy]
+   [:value [:wait :winner] render-winner]
+   [:value [:wait :high-scores] render-high-scores]])

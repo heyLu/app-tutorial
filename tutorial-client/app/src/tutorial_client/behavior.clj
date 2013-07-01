@@ -15,6 +15,10 @@
     (+ old-value points)
     old-value))
 
+(defn high-score [scores {:keys [player score]}]
+  (let [s ((fnil conj []) scores {:player player :score score})]
+    (reverse (sort-by :score s))))
+
 (defn total-count [_ nums] (apply + nums))
 
 (defn maximum [old-value nums]
@@ -76,13 +80,30 @@
               (and (:new active) (not (:old login)) (:new login)))
       [^:input {msg/topic msg/app-model msg/type :set-focus :name :game}])))
 
+(defn clear-end-game [players]
+  (vec (reduce (fn [a b]
+                 (conj a ^:input {msg/type :swap msg/topic [:other-counters b] :value 0}))
+               [^:input {msg/type :swap msg/topic [:my-counter] :value 0}
+                ^:input {msg/type :swap msg/topic [:max-count] :value 0}]
+               (keys players))))
+
+(defn end-game [{:keys [players total active]}]
+  (when (and active (>= total (* (count players) 100)))
+    (let [[player score] (last (sort-by val (seq players)))]
+      (into (clear-end-game players)
+            [{msg/type :swap msg/topic [:active-game] :value false}
+             {msg/type :swap msg/topic [:winner] :value {:player player :score score}}
+             {msg/type :high-score msg/topic [:high-scores] :player player :score score}
+             ^:input {msg/topic msg/app-model msg/type :set-focus :name :wait}]))))
+
 (def example-app
   {:version 2
    :debug true
    :transform [[:inc        [:*]            inc-transform]
                [:swap       [:**]           swap-transform]
                [:debug      [:pedestal :**] swap-transform]
-               [:add-points [:my-counter]   add-points]]
+               [:add-points [:my-counter]   add-points]
+               [:high-score [:high-scores]  high-score]]
    :derive #{[{[:my-counter] :me [:other-counters] :others [:login :name] :login-name} [:counters]
               merge-counters :map]
              [#{[:counters :*]} [:total-count] total-count :vals]
@@ -95,7 +116,8 @@
              [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]
              [#{[:other-counters :*]} [:remove-bubbles] remove-bubbles :vals]}
    :effect #{[{[:my-counter] :count [:login :name] :name} publish-counter :map]}
-   :continue #{[#{[:login :name] [:active-game]} start-game]}
+   :continue #{[#{[:login :name] [:active-game]} start-game]
+               [{[:counters] :players [:total-count] :total [:active-game] :active} end-game :map]}
    :emit [{:init init-login}
           [#{[:login :*]} (app/default-emitter [])]
           {:init init-wait}
@@ -110,7 +132,9 @@
              [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]
           [#{[:player-order :*]} (app/default-emitter [:main])]
           [#{[:add-bubbles]
-             [:remove-bubbles]} (app/default-emitter [:main])]]
+             [:remove-bubbles]} (app/default-emitter [:main])]
+          [#{[:winner]} (app/default-emitter [:wait])]
+          [#{[:high-scores]} (app/default-emitter [:wait])]]
    :focus {:login [[:login]]
            :wait  [[:wait]]
            :game  [[:main] [:pedestal]]
