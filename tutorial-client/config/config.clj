@@ -19,7 +19,9 @@
             ;; any files which use macros to read in templates. This
             ;; will force recompilation of these files and update
             ;; the templates.
-            :triggers {:html [#"tutorial_client/rendering.js"]}}
+            :triggers {:html [#"tutorial_client/rendering.js"]}
+            :ignore [#"tutorial_client.simulated.worker.js"
+                     #"tutorial_client.worker.js"]}
     ;; General application level configuration
     :application {;; The directory where all generated JavaScript for
                   ;; this application will be written.
@@ -91,24 +93,50 @@
                    :recording? true
                    :logging? true
                    :output-root :tools-public}
+              :worker-ui {:uri "/tutorial-client-dev-worker-ui.html"
+                          :name "Worker UI"
+                          :order 3
+                          :out-file "tutorial-client-dev-worker-ui.js"
+                          :main 'tutorial_client.simulated.worker_start
+                          :output-root :tools-public
+                          :template "application.html"
+                          :workers {"sim_worker" #{#"tutorial_client/behavior.js"
+                                                   #"tutorial_client/worker/.*"
+                                                   #"tutorial_client/simulated/worker.js"
+                                                   #"tutorial_client/simulated/services.js"}}}
               :development {:uri "/tutorial-client-dev.html"
                             :name "Development"
                             :out-file "tutorial-client-dev.js"
                             :main 'tutorial_client.start
                             :logging? true
-                            :order 3
+                            :order 4
                             :use-api-server? true}
+              :worker-development {:uri "/tutorial-client-worker-dev.html"
+                                   :use-api-server? true
+                                   :name "Worker Development"
+                                   :out-file "tutorial-client-worker-dev.js"
+                                   :main 'tutorial_client.worker_start
+                                   :order 5
+                                   :template "application.html"
+                                   :workers {"worker" #{#"tutorial_client/behavior.js"
+                                                        #"tutorial_client/worker/.*"
+                                                        #"tutorial_client/worker.js"
+                                                        #"tutorial_client/services.js"}}}
               :fresh {:uri "/fresh.html"
                       :name "Fresh"
                       :out-file "fresh.js"
                       :main 'io.pedestal.app.net.repl_client
-                      :order 4
+                      :order 6
                       :output-root :tools-public
                       :template "tooling.html"}
               :production {:uri "/tutorial-client.html"
+                           :use-api-server? true
                            :name "Production"
                            :optimizations :advanced
                            :out-file "tutorial-client.js"
-                           :main 'tutorial_client.start
-                           :order 5
-                           :use-api-server? true}}}})
+                           :main 'tutorial_client.worker_start
+                           :order 7
+                           :workers {"worker" #{#"tutorial_client/behavior.js"
+                                                #"tutorial_client/worker/.*"
+                                                #"tutorial_client/worker.js"
+                                                #"tutorial_client/services.js"}}}}}})
