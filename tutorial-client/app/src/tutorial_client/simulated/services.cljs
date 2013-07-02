@@ -15,11 +15,23 @@
   (increment-counter "abc" 2000 input-queue)
   (increment-counter "xyz" 5000 input-queue))
 
+(defn start-game-simulation [input-queue]
+  (receive-messages input-queue))
+
+(defn add-player [name input-queue]
+  (p/put-message input-queue {msg/type :swap
+                              msg/topic [:other-counters name]
+                              :value 0}))
+
 (defrecord MockServices [app]
   p/Activity
   (start [this]
-    (receive-messages (:input app)))
+    (platform/create-timeout 10000 #(add-player "abc" (:input app)))
+    (platform/create-timeout 15000 #(add-player "xyz" (:input app))))
   (stop [this]))
 
 (defn services-fn [message input-queue]
-  (.log js/console (str "Sending message to server: " message)))
+  (if (and (= (msg/topic message) [:active-game]) (:value message))
+    (start-game-simulation input-queue)
+    (.log js/console (str "Sending message to server: " message))))
+
