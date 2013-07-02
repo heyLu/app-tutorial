@@ -75,10 +75,7 @@
                        (session-id))]
     (notify-all-others session-id
                        "msg"
-                       (pr-str (update-in msg-data
-                                          [:io.pedestal.app.messages/topic]
-                                          conj
-                                          (subs session-id 0 8)))))
+                       (pr-str msg-data)))
   (ring-resp/response ""))
 
 (defn about-page

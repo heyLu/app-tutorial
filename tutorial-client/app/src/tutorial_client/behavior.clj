@@ -22,8 +22,8 @@
 (defn average-count [_ {:keys [total nums]}]
   (/ total (count nums)))
 
-(defn merge-counters [_ {:keys [me others]}]
-  (assoc others "Me" me))
+(defn merge-counters [_ {:keys [me others login-name]}]
+  (assoc others login-name me))
 
 (defn cumulative-average [debug key x]
   (let [k (last key)
@@ -40,12 +40,19 @@
                         (reverse
                          (sort-by second (map (fn [[k v]] [k v]) players))))))
 
+(defn init-login [_]
+  [{:login
+    {:name
+     {:transforms
+      {:login [{msg/type :swap msg/topic [:login :name] (msg/param :value) {}}
+               {msg/type :set-focus msg/topic msg/app-model :name :game}]}}}}])
+
 (defn init-main [_]
   [[:transform-enable [:main :my-counter]
     :add-points [{msg/topic [:my-counter] (msg/param :points) {}}]]])
 
-(defn publish-counter [count]
-  [{msg/type :swap msg/topic [:other-counters] :value count}])
+(defn publish-counter [{:keys [count name]}]
+  [{msg/type :swap msg/topic [:other-counters name] :value count}])
 
 (defn add-bubbles [_ {:keys [clock players]}]
   {:clock clock :count (count players)})
@@ -57,7 +64,8 @@
                [:swap       [:**]           swap-transform]
                [:debug      [:pedestal :**] swap-transform]
                [:add-points [:my-counter]   add-points]]
-   :derive #{[{[:my-counter] :me [:other-counters] :others} [:counters] merge-counters :map]
+   :derive #{[{[:my-counter] :me [:other-counters] :others [:login :name] :login-name} [:counters]
+              merge-counters :map]
              [#{[:counters :*]} [:total-count] total-count :vals]
              [#{[:counters :*]} [:max-count] maximum :vals]
              [{[:counters :*] :nums [:total-count] :total} [:average-count] average-count :map]
@@ -65,8 +73,10 @@
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]
              [#{[:counters]} [:player-order] sort-players :single-val]
              [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]}
-   :effect #{[#{[:my-counter]} publish-counter :single-val]}
-   :emit [{:init init-main}
+   :effect #{[{[:my-counter] :count [:login :name] :name} publish-counter :map]}
+   :emit [{:init init-login}
+          [#{[:login :*]} (app/default-emitter [])]
+          {:init init-main}
           [#{[:total-count]
              [:max-count]
              [:average-count]} (app/default-emitter [:main])]
@@ -75,5 +85,8 @@
              [:pedestal :debug :dataflow-time-max]
              [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]
           [#{[:player-order :*]} (app/default-emitter [:main])]
-          [#{[:add-bubbles]} (app/default-emitter [:main])]]})
+          [#{[:add-bubbles]} (app/default-emitter [:main])]]
+   :focus {:login [[:login]]
+           :game  [[:main] [:pedestal]]
+           :default :login}})
 
