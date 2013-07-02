@@ -64,6 +64,7 @@
                         ;; page will be generated from the template
                         ;; application.html
                         :uri "/tutorial-client-data-ui.html"
+                        :params "renderer=auto"
                         ;; Provide the name that will appear in the
                         ;; control panel for this aspect.
                         :name "Data UI"
@@ -81,6 +82,14 @@
                         :output-root :tools-public
                         ;; The data-ui aspect uses the tooling.html template
                         :template "tooling.html"}
+              :ui {:uri "/tutorial-client-dev-ui.html"
+                   :name "UI"
+                   :order 2
+                   :out-file "tutorial-client-dev-ui.js"
+                   :main 'tutorial_client.simulated.start
+                   :recording? true
+                   :logging? true
+                   :output-root :tools-public}
               :development {:uri "/tutorial-client-dev.html"
                             :name "Development"
                             :out-file "tutorial-client-dev.js"
