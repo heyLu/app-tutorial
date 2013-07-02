@@ -111,4 +111,5 @@
                            :out-file "tutorial-client.js"
                            :main 'tutorial_client.start
                            :order 5
-                           :use-api-server? true}}}})
+                           :use-api-server? true
+                           :compiler-options {:externs ["app/externs/game.js"]}}}}})
