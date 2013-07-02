@@ -50,11 +50,10 @@
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]}
    :effect #{[#{[:my-counter]} publish-counter :single-val]}
    :emit [{:init init-main}
-          [#{[:my-counter]
-             [:other-counters :*]
-             [:total-count]
+          [#{[:total-count]
              [:max-count]
              [:average-count]} (app/default-emitter [:main])]
+          [#{[:counters :*]} (app/default-emitter [:main])]
           [#{[:pedestal :debug :dataflow-time]
              [:pedestal :debug :dataflow-time-max]
              [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]]})
