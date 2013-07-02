@@ -54,6 +54,21 @@
   (dotimes [x (:count v)]
     (.addBubble (game renderer))))
 
+;; Render Login
+
+(defn add-login-template [renderer [_ path :as delta] input-queue]
+  (let [parent (render/get-parent-id renderer path)
+        id (render/new-id! renderer path)
+        html (:login-page templates)]
+    (dom/append! (dom/by-id parent) (html {:id id}))))
+
+(defn add-submit-login-handler [_ [_ path transform-name messages] input-queue]
+  (events/collect-and-send :click "login-button" input-queue transform-name messages
+                           {"login-name" :value}))
+
+(defn remove-submit-login-event [_ _ _]
+  (events/remove-click-event "login-button"))
+
 (defn render-config []
   [[:node-create [:main] add-template]
    [:node-destroy [:main] destroy-game]
@@ -63,4 +78,9 @@
    [:value [:main :*] set-stat]
    [:transform-enable [:main :my-counter] add-handler]
    [:value [:main :player-order :*] set-player-order]
-   [:value [:main :add-bubbles] add-bubbles]])
+   [:value [:main :add-bubbles] add-bubbles]
+   ;; Login
+   [:node-create  [:login] add-login-template]
+   [:node-destroy [:login] h/default-destroy]
+   [:transform-enable [:login :name] add-submit-login-handler]
+   [:transform-disable [:login :name] remove-submit-login-event]])
