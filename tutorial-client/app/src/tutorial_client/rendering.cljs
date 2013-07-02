@@ -30,11 +30,7 @@
   (.addPlayer (game renderer) (last path)))
 
 (defn set-score [renderer [_ path _ v] _]
-  (let [n (last path)
-        g (game renderer)]
-    (.setScore g n v)
-    (when (not= n "Me")
-      (.removeBubble g))))
+  (.setScore (game renderer) (last path) v))
 
 (defn set-stat [renderer [_ path _ v] _]
   (let [s (last path)]
@@ -53,6 +49,9 @@
 (defn add-bubbles [renderer [_ path _ v] _]
   (dotimes [x (:count v)]
     (.addBubble (game renderer))))
+
+(defn remove-bubbles [renderer _ _]
+  (.removeBubble (game renderer)))
 
 ;; Render Login
 
@@ -79,6 +78,7 @@
    [:transform-enable [:main :my-counter] add-handler]
    [:value [:main :player-order :*] set-player-order]
    [:value [:main :add-bubbles] add-bubbles]
+   [:value [:main :remove-bubbles] remove-bubbles]
    ;; Login
    [:node-create  [:login] add-login-template]
    [:node-destroy [:login] h/default-destroy]

@@ -57,6 +57,9 @@
 (defn add-bubbles [_ {:keys [clock players]}]
   {:clock clock :count (count players)})
 
+(defn remove-bubbles [rb other-counters]
+  (assoc rb :total (apply + other-counters)))
+
 (def example-app
   {:version 2
    :debug true
@@ -72,7 +75,8 @@
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug :dataflow-time-max] maximum :vals]
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]
              [#{[:counters]} [:player-order] sort-players :single-val]
-             [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]}
+             [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]
+             [#{[:other-counters :*]} [:remove-bubbles] remove-bubbles :vals]}
    :effect #{[{[:my-counter] :count [:login :name] :name} publish-counter :map]}
    :emit [{:init init-login}
           [#{[:login :*]} (app/default-emitter [])]
@@ -85,7 +89,8 @@
              [:pedestal :debug :dataflow-time-max]
              [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]
           [#{[:player-order :*]} (app/default-emitter [:main])]
-          [#{[:add-bubbles]} (app/default-emitter [:main])]]
+          [#{[:add-bubbles]
+             [:remove-bubbles]} (app/default-emitter [:main])]]
    :focus {:login [[:login]]
            :game  [[:main] [:pedestal]]
            :default :login}})
