@@ -9,6 +9,13 @@
 (defn swap-transform [_  message]
   (:value message))
 
+(defn publish-counter [count]
+  "Sends out `count` to a service.
+
+The id will be set by that service before forwarding it to the other
+clients."
+  [{msg/type :swap msg/topic [:other-counters] :value count}])
+
 (defn init-main [_]
   ; tells the renderer that a user action related to :my-counter can
   ; send {msg/type :inc msg/topic [:my-counter]} to increment the
@@ -20,6 +27,7 @@
               ; type topic (routed to first match in order)
    :transform [[:inc  [:my-counter] inc-transform]
                [:swap [:**]         swap-transform]]
+   :effect #{[#{[:my-counter]} publish-counter :single-val]}
    :emit [{:init init-main}
           [#{[:my-counter] [:other-counters :*]} (app/default-emitter [:main])]]})
 
