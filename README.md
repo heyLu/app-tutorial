@@ -1,4 +1,4 @@
-# Pedestal-app Tutorial
+# Pedestal-app Tutorial [![Build Status](https://travis-ci.org/pedestal/app-tutorial.png)](https://travis-ci.org/pedestal/app-tutorial)
 
 Welcome to the Pedestal-app Tutorial! This tutorial will guide you step-by-step through pedestal-app in its entirety.
 
