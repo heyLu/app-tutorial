@@ -16,6 +16,8 @@ The id will be set by that service before forwarding it to the other
 clients."
   [{msg/type :swap msg/topic [:other-counters] :value count}])
 
+(defn total-count [_ nums] (apply + nums))
+
 (defn init-main [_]
   ; tells the renderer that a user action related to :my-counter can
   ; send {msg/type :inc msg/topic [:my-counter]} to increment the
@@ -28,6 +30,9 @@ clients."
    :transform [[:inc  [:my-counter] inc-transform]
                [:swap [:**]         swap-transform]]
    :effect #{[#{[:my-counter]} publish-counter :single-val]}
+   :derive #{[#{[:my-counter] [:other-counters :*]} [:total-count] total-count :vals]}
    :emit [{:init init-main}
-          [#{[:my-counter] [:other-counters :*]} (app/default-emitter [:main])]]})
+          [#{[:my-counter]
+             [:other-counters :*]
+             [:total-count]} (app/default-emitter [:main])]]})
 
