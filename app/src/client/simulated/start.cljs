@@ -5,11 +5,13 @@
             ;; tools to work.
             [io.pedestal.app-tools.tooling :as tooling]
 
+            [io.pedestal.app :as app]
             [io.pedestal.app.protocols :as p]
             [client.simulated.services :as services]))
 
 (defn ^:export main []
   (let [app (start/create-app d/data-renderer-config)
         services (services/->MockServices (:app app))]
+    (app/consume-effects (:app app) services/services-fn)
     (p/start services)
     app))
