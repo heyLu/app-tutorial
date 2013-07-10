@@ -6,7 +6,7 @@ The tutorial is located in the [Wiki](../../wiki) and is composed of 34 sections
 of the tutorial you'll construct an interactive multi-player bubble-popping game that exercises nearly every nook and
 cranny of pedestal-app.
 
-[Get Started!](../../wiki)
+### [Get Started!](../../wiki)
 
 ![Part 2](part-2-screenshot.png)
 
