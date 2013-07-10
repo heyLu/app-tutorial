@@ -24,6 +24,9 @@ clients."
 (defn average-count [_ {:keys [total nums]}]
   (/ total (count nums)))
 
+(defn merge-counters [_ {:keys [me others]}]
+  (assoc others "Me" me))
+
 (defn init-main [_]
   ; tells the renderer that a user action related to :my-counter can
   ; send {msg/type :inc msg/topic [:my-counter]} to increment the
@@ -36,13 +39,11 @@ clients."
    :transform [[:inc  [:my-counter] inc-transform]
                [:swap [:**]         swap-transform]]
    :effect #{[#{[:my-counter]} publish-counter :single-val]}
-   :derive #{[#{[:my-counter] [:other-counters :*]} [:total-count] total-count :vals]
-             [#{[:my-counter] [:other-counters :*]} [:max-count] maximum :vals]
+   :derive #{[#{[:counters :*]} [:total-count] total-count :vals]
+             [#{[:counters :*]} [:max-count] maximum :vals]
+             [{[:counters :*] :nums [:total-count] :total} [:average-count] average-count :map]
 
-             [{[:my-counter] :nums
-               [:other-counters :*] :nums
-               [:total-count] :total}
-              [:average-count] average-count :map]}
+             [{[:my-counter] :me [:other-counters] :others} [:counters] merge-counters :map]}
    :emit [{:init init-main}
           [#{[:my-counter]
              [:other-counters :*]
