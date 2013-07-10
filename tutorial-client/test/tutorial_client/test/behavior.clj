@@ -20,7 +20,7 @@
          2)))
 
 (defn- data-model [app]
-  (-> app :state deref :data-model))
+  (-> app :state deref :data-model (select-keys [:my-counter])))
 
 (deftest test-app-state
   (let [app (app/build example-app)]
