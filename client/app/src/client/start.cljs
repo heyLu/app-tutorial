@@ -5,6 +5,7 @@
             [io.pedestal.app.render :as render]
             [io.pedestal.app.messages :as msg]
             [client.behavior :as behavior]
+            [client.services :as services]
             [client.post-processing :as post]
             [client.rendering :as rendering]))
 
@@ -16,4 +17,8 @@
     {:app app :app-model app-model}))
 
 (defn ^:export main []
-  (create-app (rendering/render-config)))
+  (let [app (create-app (rendering/render-config))
+        services (services/->Services (:app app))]
+    (app/consume-effects (:app app) services/services-fn)
+    (p/start services)
+    app))

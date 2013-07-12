@@ -21,7 +21,8 @@
             ;; the templates.
             :triggers {:html [#"client/rendering.js"]}}
     ;; General application level configuration
-    :application {;; The directory where all generated JavaScript for
+    :application {:api-server {:host "localhost" :port 8080 :log-fn nil}
+                  ;; The directory where all generated JavaScript for
                   ;; this application will be written.
                   :generated-javascript "generated-js"
                   ;; The default template to use when creating host
@@ -95,6 +96,7 @@
                             :out-file "client-dev.js"
                             :main 'client.start
                             :logging? true
+                            :use-api-server? true
                             :order 3}
               :fresh {:uri "/fresh.html"
                       :name "Fresh"
@@ -108,4 +110,5 @@
                            :optimizations :advanced
                            :out-file "client.js"
                            :main 'client.start
+                           :use-api-server? true
                            :order 5}}}})
