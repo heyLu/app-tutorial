@@ -77,10 +77,19 @@
                         :recording? true
                         ;; Turn on logging
                         :logging? true
+                        :params "renderer=auto"
                         ;; build output goes to tools/out/public
                         :output-root :tools-public
                         ;; The data-ui aspect uses the tooling.html template
                         :template "tooling.html"}
+              :ui {:uri "/client-dev-ui.html"
+                   :name "UI"
+                   :order 1
+                   :out-file "client-dev-ui.js"
+                   :main 'client.simulated.start
+                   :recording? true
+                   :logging? true
+                   :output-root :tools-public}
               :development {:uri "/client-dev.html"
                             :name "Development"
                             :out-file "client-dev.js"
