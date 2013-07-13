@@ -60,11 +60,10 @@ clients."
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug :dataflow-time-max] maximum :vals]
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]}
    :emit [{:init init-main}
-          [#{[:my-counter]
-             [:other-counters :*]
-             [:total-count]
+          [#{[:total-count]
              [:max-count]
              [:average-count]} (app/default-emitter [:main])]
+          [#{[:counters :*]} (app/default-emitter [:main])]
 
           [#{[:pedestal :debug :dataflow-time]
              [:pedestal :debug :dataflow-time-max]
