@@ -96,6 +96,7 @@ var startGame = function() {
   updateDataflowStats();
   updatePlayerScores();
   updatePlayerOrder();
+  makeCircles();
 }
 
 var endGame = function() {
@@ -104,6 +105,18 @@ var endGame = function() {
   gameActive = false;
 
   game.destroy();
+}
+
+// This will be removed as we make improvements to the game.
+// The dataflow will control when circles are created.
+var makeCircles = function() {
+  if(gameActive) {
+    var p = players.length;
+    for(var i=0;i<p;i++) {
+      game.addBubble();
+    }
+    setTimeout(makeCircles, 2000);
+  }
 }
 
 setTimeout(startGame, 1000);

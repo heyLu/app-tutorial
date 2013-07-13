@@ -42,6 +42,9 @@ clients."
                         (reverse
                           (sort-by second (map (fn [[k v]] [k v]) players))))))
 
+(defn add-bubbles [_ {:keys [clock players]}]
+  {:clock clock :count (count players)})
+
 (defn init-main [_]
   ; tells the renderer that a user action related to :my-counter can
   ; send {msg/type :inc msg/topic [:my-counter]} to increment the
@@ -52,7 +55,7 @@ clients."
   {:version 2
    :debug true
               ; type topic (routed to first match in order)
-   :transform [[:inc   [:my-counter]   inc-transform]
+   :transform [[:inc   [:*]            inc-transform]
                [:swap  [:**]           swap-transform]
                [:debug [:pedestal :**] swap-transform]]
    :effect #{[#{[:my-counter]} publish-counter :single-val]}
@@ -60,6 +63,9 @@ clients."
              [#{[:counters :*]} [:max-count] maximum :vals]
              [{[:counters :*] :nums [:total-count] :total} [:average-count] average-count :map]
              [#{[:counters]} [:player-order] sort-players :single-val]
+             ; :add-bubbles is computed by add-bubbles with ":clock as ; :clock"
+             ; and ":counters as :players" as input map
+             [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]
 
              [{[:my-counter] :me [:other-counters] :others} [:counters] merge-counters :map]
 
@@ -70,7 +76,9 @@ clients."
              [:max-count]
              [:average-count]} (app/default-emitter [:main])]
           [#{[:counters :*]} (app/default-emitter [:main])]
+          [#{[:add-bubbles]} (app/default-emitter [:main])]
           [#{[:player-order :*]} (app/default-emitter [:main])]
+          [#{[:clock]} (app/default-emitter [:main])]
 
           [#{[:pedestal :debug :dataflow-time]
              [:pedestal :debug :dataflow-time-max]

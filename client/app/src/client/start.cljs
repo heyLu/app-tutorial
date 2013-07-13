@@ -5,6 +5,7 @@
             [io.pedestal.app.render :as render]
             [io.pedestal.app.messages :as msg]
             [client.behavior :as behavior]
+            [client.clock :as clock]
             [client.services :as services]
             [client.post-processing :as post]
             [client.rendering :as rendering]))
@@ -13,6 +14,7 @@
   (let [app (app/build (post/add-post-processors behavior/example-app))
         render-fn (push-render/renderer "content" render-config render/log-fn)
         app-model (render/consume-app-model app render-fn)]
+    (clock/increment-game-clock (:input app))
     (app/begin app)
     {:app app :app-model app-model}))
 

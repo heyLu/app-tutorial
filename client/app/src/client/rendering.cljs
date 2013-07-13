@@ -50,6 +50,10 @@
                (fn [points]
                  (events/send-transforms input-queue transform-name messages))))
 
+(defn add-bubbles [renderer [_ path _ m] _]
+  (dotimes [_ (:count m)]
+    (.addBubble (game renderer))))
+
 (defn render-config []
   [[:node-create [:main] add-template]
    [:node-destroy [:main] destroy-game]
@@ -59,5 +63,6 @@
    [:value [:main :debug :*] set-stat]
    [:value [:main :*] set-stat]
    [:value [:main :player-order :*] set-player-order]
+   [:value [:main :add-bubbles] add-bubbles]
 
    [:transform-enable [:main :my-counter] add-handler]])
