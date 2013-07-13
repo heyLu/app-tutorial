@@ -33,6 +33,7 @@
    [:transform-enable [:main :my-counter] (h/add-send-on-click "inc-button")]
    [:transform-disable [:main :my-counter] (h/remove-send-on-click "inc-button")]
    [:value [:main :*] render-value]
+   [:value [:pedestal :debug :*] render-value]
 
    [:node-create [:main :other-counters] render-other-counters-element]
    [:node-create [:main :other-counters :*]

@@ -24,6 +24,16 @@ clients."
 (defn average-count [_ {:keys [total nums]}]
   (/ total (count nums)))
 
+(defn cumulative-average [debug key x]
+  (let [k (last key)
+        i (inc (or (::avg-count debug) 0))
+        avg (or (::avg-raw debug) 0)
+        new-avg (+ avg (/ (- x avg) i))]
+    (assoc debug
+           ::avg-count i
+           ::avg-raw new-avg
+           (keyword (str (name k) "-avg")) (int new-avg))))
+
 (defn merge-counters [_ {:keys [me others]}]
   (assoc others "Me" me))
 
@@ -35,19 +45,27 @@ clients."
 
 (def example-app
   {:version 2
+   :debug true
               ; type topic (routed to first match in order)
-   :transform [[:inc  [:my-counter] inc-transform]
-               [:swap [:**]         swap-transform]]
+   :transform [[:inc   [:my-counter]   inc-transform]
+               [:swap  [:**]           swap-transform]
+               [:debug [:pedestal :**] swap-transform]]
    :effect #{[#{[:my-counter]} publish-counter :single-val]}
    :derive #{[#{[:counters :*]} [:total-count] total-count :vals]
              [#{[:counters :*]} [:max-count] maximum :vals]
              [{[:counters :*] :nums [:total-count] :total} [:average-count] average-count :map]
 
-             [{[:my-counter] :me [:other-counters] :others} [:counters] merge-counters :map]}
+             [{[:my-counter] :me [:other-counters] :others} [:counters] merge-counters :map]
+
+             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug :dataflow-time-max] maximum :vals]
+             [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]}
    :emit [{:init init-main}
           [#{[:my-counter]
              [:other-counters :*]
              [:total-count]
              [:max-count]
-             [:average-count]} (app/default-emitter [:main])]]})
+             [:average-count]} (app/default-emitter [:main])]
 
+          [#{[:pedestal :debug :dataflow-time]
+             [:pedestal :debug :dataflow-time-max]
+             [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]]})
