@@ -107,8 +107,7 @@ var endGame = function() {
   game.destroy();
 }
 
-// This will be removed as we make improvements to the game.
-// The dataflow will control when circles are created.
+// why is this still used?
 var makeCircles = function() {
   if(gameActive) {
     var p = players.length;
