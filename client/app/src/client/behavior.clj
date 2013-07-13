@@ -45,17 +45,24 @@ clients."
 (defn add-bubbles [_ {:keys [clock players]}]
   {:clock clock :count (count players)})
 
+(defn add-points [old-value message]
+  (if-let [points (int (:points message))]
+    (+ old-value points)
+    old-value))
+
 (defn init-main [_]
   ; tells the renderer that a user action related to :my-counter can
   ; send {msg/type :inc msg/topic [:my-counter]} to increment the
   ; counter
-  [[:transform-enable [:main :my-counter] :inc [{msg/topic [:my-counter]}]]])
+  [[:transform-enable [:main :my-counter]
+    :add-points [{msg/topic [:my-counter] (msg/param :points) {}}]]])
 
 (def example-app
   {:version 2
    :debug true
               ; type topic (routed to first match in order)
    :transform [[:inc   [:*]            inc-transform]
+               [:add-points [:my-counter] add-points]
                [:swap  [:**]           swap-transform]
                [:debug [:pedestal :**] swap-transform]]
    :effect #{[#{[:my-counter]} publish-counter :single-val]}

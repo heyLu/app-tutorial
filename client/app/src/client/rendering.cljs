@@ -48,7 +48,7 @@
 (defn add-handler [renderer [_ path transform-name messages] input-queue]
   (.addHandler (game renderer)
                (fn [points]
-                 (events/send-transforms input-queue transform-name messages))))
+                 (events/send-transforms input-queue transform-name messages {:points points}))))
 
 (defn add-bubbles [renderer [_ path _ m] _]
   (dotimes [_ (:count m)]
