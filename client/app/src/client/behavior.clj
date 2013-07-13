@@ -37,6 +37,11 @@ clients."
 (defn merge-counters [_ {:keys [me others]}]
   (assoc others "Me" me))
 
+(defn sort-players [_ players]
+  (into {} (map-indexed (fn [i [k v]] [k i])
+                        (reverse
+                          (sort-by second (map (fn [[k v]] [k v]) players))))))
+
 (defn init-main [_]
   ; tells the renderer that a user action related to :my-counter can
   ; send {msg/type :inc msg/topic [:my-counter]} to increment the
@@ -54,6 +59,7 @@ clients."
    :derive #{[#{[:counters :*]} [:total-count] total-count :vals]
              [#{[:counters :*]} [:max-count] maximum :vals]
              [{[:counters :*] :nums [:total-count] :total} [:average-count] average-count :map]
+             [#{[:counters]} [:player-order] sort-players :single-val]
 
              [{[:my-counter] :me [:other-counters] :others} [:counters] merge-counters :map]
 
@@ -64,6 +70,7 @@ clients."
              [:max-count]
              [:average-count]} (app/default-emitter [:main])]
           [#{[:counters :*]} (app/default-emitter [:main])]
+          [#{[:player-order :*]} (app/default-emitter [:main])]
 
           [#{[:pedestal :debug :dataflow-time]
              [:pedestal :debug :dataflow-time-max]
