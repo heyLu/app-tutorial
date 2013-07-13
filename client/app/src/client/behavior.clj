@@ -9,12 +9,12 @@
 (defn swap-transform [_  message]
   (:value message))
 
-(defn publish-counter [count]
+(defn publish-counter [{:keys [count name]}]
   "Sends out `count` to a service.
 
 The id will be set by that service before forwarding it to the other
 clients."
-  [{msg/type :swap msg/topic [:other-counters] :value count}])
+  [{msg/type :swap msg/topic [:other-counters name] :value count}])
 
 (defn total-count [_ nums] (apply + nums))
 
@@ -34,8 +34,8 @@ clients."
            ::avg-raw new-avg
            (keyword (str (name k) "-avg")) (int new-avg))))
 
-(defn merge-counters [_ {:keys [me others]}]
-  (assoc others "Me" me))
+(defn merge-counters [_ {:keys [me others login-name]}]
+  (assoc others login-name me))
 
 (defn sort-players [_ players]
   (into {} (map-indexed (fn [i [k v]] [k i])
@@ -57,6 +57,13 @@ clients."
   [[:transform-enable [:main :my-counter]
     :add-points [{msg/topic [:my-counter] (msg/param :points) {}}]]])
 
+(defn init-login [_]
+  [[:node-create [:login] :map]
+   [:node-create [:login :name] :map]
+   [:transform-enable [:login :name]
+    :login [{msg/type :swap msg/topic [:login :name] (msg/param :value) {}}
+            {msg/type :set-focus msg/topic msg/app-model :name :game}]]])
+
 (def example-app
   {:version 2
    :debug true
@@ -65,7 +72,7 @@ clients."
                [:add-points [:my-counter] add-points]
                [:swap  [:**]           swap-transform]
                [:debug [:pedestal :**] swap-transform]]
-   :effect #{[#{[:my-counter]} publish-counter :single-val]}
+   :effect #{[{[:my-counter] :count [:login :name] :name} publish-counter :map]}
    :derive #{[#{[:counters :*]} [:total-count] total-count :vals]
              [#{[:counters :*]} [:max-count] maximum :vals]
              [{[:counters :*] :nums [:total-count] :total} [:average-count] average-count :map]
@@ -74,11 +81,13 @@ clients."
              ; and ":counters as :players" as input map
              [{[:clock] :clock [:counters] :players} [:add-bubbles] add-bubbles :map]
 
-             [{[:my-counter] :me [:other-counters] :others} [:counters] merge-counters :map]
+             [{[:my-counter] :me [:other-counters] :others [:login :name] :login-name} [:counters] merge-counters :map]
 
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug :dataflow-time-max] maximum :vals]
              [#{[:pedestal :debug :dataflow-time]} [:pedestal :debug] cumulative-average :map-seq]}
-   :emit [{:init init-main}
+   :emit [{:init init-login}
+          [#{[:login :*]} (app/default-emitter [])]
+          {:init init-main}
           [#{[:total-count]
              [:max-count]
              [:average-count]} (app/default-emitter [:main])]
@@ -89,4 +98,7 @@ clients."
 
           [#{[:pedestal :debug :dataflow-time]
              [:pedestal :debug :dataflow-time-max]
-             [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]]})
+             [:pedestal :debug :dataflow-time-avg]} (app/default-emitter [])]]
+   :focus {:login [[:login]]
+           :game  [[:main] [:pedestal]]
+           :default :login}})
