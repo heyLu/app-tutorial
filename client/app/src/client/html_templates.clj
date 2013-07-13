@@ -3,4 +3,5 @@
 
 (defmacro client-templates
   []
-  {:client-page (dtfn (tnodes "game.html" "tutorial") #{:id})})
+  {:client-page (dtfn (tnodes "game.html" "tutorial") #{:id})
+   :login-page (tfn (tnodes "login.html" "login"))})
